@@ -1,7 +1,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Cuidado ao manipular a pilha, senão interfere na do programa que está sendo simulado ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+cmp r0, r0
 ; O programa simulado tem uma memória de tamanho menor, pois o código do simulador ocupa uma parte da memória do simulador
 
 ; Inicializa Stack com o valor que está em sp
@@ -78,11 +78,53 @@ loop:
 	jeq _mov
 
 	; Instruções Aritméticas
-	loadn r2, #51
+	loadn r2, #32
 	cmp r1, r2
-	jeq _mov
+	jeq _add
 
+	loadn r2, #33
+	cmp r1, r2
+	jeq _sub
 
+	loadn r2, #34
+	cmp r1, r2
+	jeq _mult
+
+	loadn r2, #35
+	cmp r1, r2
+	jeq _div
+
+	loadn r2, #36
+	cmp r1, r2
+	jeq _incdec
+
+	loadn r2, #37
+	cmp r1, r2
+	jeq _mod
+
+	loadn r2, #18
+	cmp r1, r2
+	jeq _and
+
+	loadn r2, #19
+	cmp r1, r2
+	jeq _or
+
+	loadn r2, #20
+	cmp r1, r2
+	jeq _xor
+
+	loadn r2, #21
+	cmp r1, r2
+	jeq _not
+
+	loadn r2, #16
+	cmp r1, r2
+	jeq _shift
+
+	loadn r2, #22
+	cmp r1, r2
+	jeq _shift
 
 	; Instruções de Controle
 	loadn r2, #15
@@ -426,46 +468,144 @@ _div:
 
 	storei r1, r2
 
-	jmp switch_fimim
+	jmp switch_fim
 
-_decinc:
+_incdec:
 	call get_RX
+	breakp
 
 	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
 
-	rotl r2, #6
-	shiftr0, r2, #15
+	mov r3, r0
+	rotl r3, #6
+	shiftr0 r3, #15
 
+	cmp r3, r3
 	jz _inc
 	dec r2
-	jmp _decinc_end
+	jmp _incdec_end
 _inc:
 	inc r2
-_decinc_end:
+_incdec_end:
 	storei r1, r2
 	jmp switch_fim
 
 _mod:
+	call get_RX
+	call get_RY
+	call get_RZ
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+	; r5: Onde está salvo RZ
+	; r6: O conteúdo de RZ
+
+	mod r2, r4, r6
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: Novo conteúdo de RX
+
+	storei r1, r2
+
 	jmp switch_fim
 
 _and:
+	call get_RX
+	call get_RY
+	call get_RZ
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+	; r5: Onde está salvo RZ
+	; r6: O conteúdo de RZ
+
+	and r2, r4, r6
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: Novo conteúdo de RX
+
+	storei r1, r2
+
 	jmp switch_fim
 
 _or:
+	call get_RX
+	call get_RY
+	call get_RZ
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+	; r5: Onde está salvo RZ
+	; r6: O conteúdo de RZ
+
+	or r2, r4, r6
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: Novo conteúdo de RX
+
+	storei r1, r2
+
 	jmp switch_fim
 
 _xor:
+	call get_RX
+	call get_RY
+	call get_RZ
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+	; r5: Onde está salvo RZ
+	; r6: O conteúdo de RZ
+
+	xor r2, r4, r6
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: Novo conteúdo de RX
+
+	storei r1, r2
+
 	jmp switch_fim
 
 _not:
-	jmp switch_fim
+	call get_RX
+	call get_RY
 
-_rot:
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+
+	not r2, r4
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: Novo conteúdo de RX
+
+	storei r1, r2
+
 	jmp switch_fim
 
 _shift:
+	
 	jmp switch_fim
 
 _cmp:
