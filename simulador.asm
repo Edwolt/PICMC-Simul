@@ -871,90 +871,86 @@ _outchar:
 erro_mem:
 _halt:
 	loadn r0, #0 ; Posição na tela
-	loadn r2, #'\0' ; Criterio de Parada
 	loadn r1, #StrHalt
-	loadn r6, #2304 ; Vermelho
-imprime_str_loop:
-	loadi r7, r1 ; Carrega catacter
+	loadn r2, #2304 ; Vermelho
+
+	call imprime_str
+
+	loadn r0, #0 ; Número do Registrador
+	loadn r1, #3 ; Linha da tela
+	loadn r5, #Regs ; Vetor de Registrador
+	loadn r6, #40 ; Tamanho da linha
+	loadn r7, #8 ; Critério de parada
+
+regs_loop:
+	mul r2, r1, r6
+
+	; r0: Número do Registrador
+	; r1: Linha da tela
+	; r2: Posição na Tela
+	; r5: Vetor de Registrador
+	; r6: Tamanho da linha
+	; r7: Critério de parada
+
+	loadn r3, #'R'
+	outchar r3, r2
+	inc r2
+
+	loadn r4, #Inteiros
+	add r3, r4, r0
+	loadi r3, r3
+	outchar r3, r2
+	inc r2
+
+	loadn r3, #':'
+	outchar r3, r2
+	inc r2
+
+	loadn r3, #' '
+	outchar r3, r2
+	inc r2
+
+	loadi r3, r5
+	call imprime_int
 	
-	; Compara criterio de parada
-	cmp r7, r2
+	inc r0
+	inc r1
+	inc r5
+
+	cmp r0, r7
+	jne regs_loop
+
+regs_fim:
+	halt
+	jmp switch_fim
+
+imprime_str:
+	; r0: Posição na tela
+	; r1: String
+	; r2: Cor
+
+	push r3
+	push r4
+
+	loadn r3, #'\0' ; Critério de Parada
+imprime_str_loop:
+	loadi r4, r1
+	cmp r4, r3
 	jeq imprime_str_fim
 
-	or r7, r7, r6 ; Colore caracter
+	or r4, r4, r2
+	outchar r4, r0
 
-	outchar r7, r0
 	inc r0
 	inc r1
 
 	jmp imprime_str_loop
 
 imprime_str_fim:
-	
 
-	loadn r0, #0 ; Número do Registrador
-	loadn r1, #3 ; Linha da tela
-	loadn r3, #Regs
-regs_loop:
-	loadn r7, #8
-	cmp r0, r7
-	jeq regs_fim
-
-	
-	loadn r7, #40 ; Tamanho da linha
-	mul r2, r1, r7 ; Posição na tela
-	
-	; r0: Número do registrador
-	; r1: Linha da tela
-	; r2: Posição da tela
-	; r3: Inicio do vetor de Registradores
-
-	; Imprime O nome do registrador
-	loadn r4, #'R'
-	outchar r4, r2
-	inc r2
-
-	loadn r5, #Inteiros
-	add r5, r0, r5
-	loadi r5, r5
-	outchar r5, r2
-	inc r2
-
-	loadn r4, #':'
-	outchar r4, r2
-	inc r2
-
-	loadn r4, #' '
-	outchar r4, r2
-	inc r2
-
-	; r0: Número do registrador
-	; r1: Linha da tela
-	; r2: Posição da tela
-
-	loadi r3, r7
-
-	; r0: Número do registrador
-	; r1: Linha da tela
-	; r2: Posição da tela
-	; r3: Conteúdo do Registrador
-
-	mov r4, r3
-	loadi r3, r3
-	call imprime_int
-	mov r3, r4
-
-	inc r0
-	inc r1
-	inc r3
-
-	jmp regs_loop
-
-regs_fim:
-	halt
-	halt
-	halt
-	jmp switch_fim
+	pop r4
+	pop r3
+	rts
 
 
 	;imprime_int_loop(){
@@ -976,35 +972,36 @@ imprime_int:
 	push r6
 	push r7
 
-	loadn r4, #Inteiros
-	loadn r5, #10000
 	; r0: Número do registrador
 	; r1: Linha da tela
 	; r2: Posição da tela
 	; r3: A valor a ser impresso
 
+	loadn r4, #Inteiros
+	loadn r5, #10000
+	loadn r6, #10
 imprime_int_loop:
-
 	; r0: Número do registrador
 	; r1: Linha da tela
 	; r2: Posição da tela
 	; r3: A valor a ser impressor
-	; r4: A base do vetor de Inteiros
+	; r4: O vetor Inteiros
 	; r5: A casa decimal a ser pega
+	; r6: #10
 
 	loadn r7, #0
 	cmp r5, r7
 	jeq imprime_int_fim
 
-	div r6, r3, r5 ; Digito a ser impresso
-	add r7, r4, r6 ; Posição onde está o número
+	div r7, r3, r5 ; Digito a ser impresso
+
+	add r7, r4, r7 ; Posição onde está o número
 	loadi r7, r7
 	outchar r7, r2
 	inc r2
 
 	mod r3, r3, r5
-	loadn r7, #10
-	div r5, r5, r7
+	div r5, r5, r6
 
 	jmp imprime_int_loop
 
@@ -1014,7 +1011,8 @@ imprime_int_fim:
 	pop r6
 	pop r5
 	pop r4
-
 	rts
+
+var #9
 
 code: ; Código a ser simulado
