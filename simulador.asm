@@ -335,6 +335,7 @@ _mov_toSP:
 
 ; Instruçoẽs Aritméticas
 
+; TODO adcionar uso do FlagR
 _add:
 	call get_RX
 	call get_RY
@@ -428,6 +429,22 @@ _div:
 	jmp switch_fimim
 
 _decinc:
+	call get_RX
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+
+	rotl r2, #6
+	shiftr0, r2, #15
+
+	jz _inc
+	dec r2
+	jmp _decinc_end
+_inc:
+	inc r2
+_decinc_end:
+	storei r1, r2
 	jmp switch_fim
 
 _mod:
