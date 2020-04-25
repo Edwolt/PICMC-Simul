@@ -217,14 +217,11 @@ _loadn:
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
 
-	loadn r5, #PrgC
 	call busca_memoria
-	loadn r6, #PrgC
 
 	; r0: O número
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
-	breakp
 	storei r1, r0
 
 	jmp switch_fim
@@ -249,6 +246,9 @@ _mov:
 	loadn r4, #3
 	cmp r3, r4
 	jeq _mov_toSP
+
+	jmp _mov_regreg ; default
+
 _mov_switch_fim:
 
 	jmp switch_fim
