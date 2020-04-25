@@ -43,3 +43,5 @@ loop:
 
 	; r0 tem a instrução
 	; r1 tem o opcode
+
+	jmp loop
