@@ -35,4 +35,11 @@ loop:
 	inc r1
 	store PrgC, r1
 
-	halt
+	; r0 tem a instrução
+
+	; Pega opcode da operação 
+	mov r1, r0
+	shiftr0 r1, #10
+
+	; r0 tem a instrução
+	; r1 tem o opcode
