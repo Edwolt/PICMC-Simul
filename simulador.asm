@@ -28,7 +28,11 @@ main:
 	breakp
 loop:
 	; Pega o valor que PrgC aponta
-	load r0, PrgC
-	loadi r0, r0
-	
+	load r1, PrgC
+	loadi r0, r1
+
+	; Incrementa PrgC
+	inc r1
+	store PrgC, r1
+
 	halt
