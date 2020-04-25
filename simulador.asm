@@ -1,31 +1,23 @@
 ; O código não pode manipular a pilha, senão interfere na pilha do programa que está sendo simulado
 jmp main
-store 0, r0
-load r0, 0
-storei r0, r0
-loadi r0, r0
-loadn r0, #0
-mov sp, r0
 
-; Usei nop porque por algum motivo do além var #0 não estava sendo criado
-Stack: nop
-FlagR: nop
-PrgC: nop
+Stack: var #1
 
-Reg0: nop
-Reg1: nop
-Reg2: nop
-Reg3: nop
-Reg4: nop
-Reg5: nop
-Reg6: nop
-Reg7: nop
+FlagR: var #1
+
+PrgC: static PrgC + #0, #code
+
+Regs: var #8
+	static Regs + #0, #0
+	static Regs + #1, #0
+	static Regs + #2, #0
+	static Regs + #3, #0
+	static Regs + #4, #0
+	static Regs + #5, #0
+	static Regs + #6, #0
+	static Regs + #7, #0
 
 main:
-	; Inicializa PrgC com o íncio do código
-	loadn r7, #code ; Salva o ínicio do código no r7
-	store PrgC, r7
-
 	; Inicializa Stack com o valor que está em sp
 	mov r0, sp
 	store Stack, r0
@@ -35,6 +27,9 @@ loop:
 	; Pega o valor que PrgC aponta
 	load r1, PrgC
 	loadi r0, r1
+
+	load r6, PrgC
+
 
 	; Incrementa PrgC
 	inc r1
@@ -49,6 +44,7 @@ loop:
 	; r0 tem a instrução
 	; r1 tem o opcode
 
+	breakp
 	; Switch das Instruções
 	loadn r2, #49
 	cmp r1, r2
@@ -79,6 +75,10 @@ fim:
 
 ; Instruções de manipualação de dado
 _store:
+	mov r1, r0
+	rotl r1, #6
+	shiftr0 r1, #13
+
 	jmp fim
 
 _load:
@@ -95,5 +95,3 @@ _loadn:
 
 _mov:
 	jmp fim
-
-code:
