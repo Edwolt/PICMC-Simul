@@ -5,7 +5,7 @@
 ; O programa simulado tem uma memória de tamanho menor, pois o código do simulador ocupa uma parte da memória do simulador
 
 ; Inicializa Stack com o valor que está em sp
-mov r0, sp ; Pega o valor da stack, pois nela iniciará a stack do programa a ser simulado
+mov r0, sp ; Pega o valor de sp, pois nela iniciará a stack do programa a ser simulado
 loadn r7, #code ; em r7 fica salvo o valor #code
 loadn r2, #9
 mov r1, r7
@@ -13,15 +13,17 @@ add r1, r1, r2 ; O programa do simulador pode guardar uma chamada de função
 sub r0, r0, r1 ; Transforma o valor real do Stack Pointer para o valor virtual
 store Stack, r0
 
-; r7: #code
+; r7: #code (Constante durante todo código)
 
 jmp loop
 
+; Variaveis para o programa simulado
 Stack: var #1 ; Guarda o Stack Pointer do programa simulado
 			  ; 
 			  ; A Stack terá que começar com um valor menor do que costuma
 			  ; pois na memória não tem espaço para todo o programa
 			  ; por causa que parte está sendo gasta com o código do simulador
+
 FlagR: var #1 ; Guarda o Flag Register do programa simulado
 PrgC: var #1  ; Guarda o Program Counter do programa simulado
 Regs: var #8
@@ -34,8 +36,10 @@ Regs: var #8
 	static Regs + #6, #0
 	static Regs + #7, #0
 
+; Variaveis para o programa simulador
 StrHalt: string "#HALT#"
 Inteiros: string "0123456789"
+
 loop:
 	call busca_memoria
 
@@ -76,7 +80,7 @@ loop:
 	loadn r2, #15
 	cmp r1, r2
 	jeq _halt
-loop_fim:
+switch_fim:
 
 	jmp loop
 
@@ -116,14 +120,14 @@ busca_memoria:
 	push r1
 	push r2
 
-	; Pega o valor que Program Counter aponta
-	load r1, PrgC ; Valor real do Program Counter
-	add r1, r1, r7 ; Transforma o valor virtual do Program counter para o valor real
-	loadi r0, r1 ; Carrega valor apontado pelo Program Counter (valor real)
+	; Pega o valor que PC aponta
+	load r1, PrgC ; Valor virtual do PC
+	add r2, r1, r7 ; Transforma o valor virtual do PC para o valor real
+	loadi r0, r2 ; Carrega valor apontado pelo PC (valor real)
 
-	; Incrementa valor virtual do Program Counter e o salva na memória
-	inc r2
-	store PrgC, r2
+	; Incrementa valor virtual do PC e o salva na memória
+	inc r1
+	store PrgC, r1
 
 	pop r2
 	pop r1
@@ -138,6 +142,7 @@ busca_memoria:
 _store:
 	call get_RX
 
+	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
 
@@ -150,12 +155,13 @@ _store:
 
 	storei r0, r2 ; guarda no endereço (em r0) o conteúdo de RX (em r2)
 
-	jmp loop_fim
+	jmp switch_fim
 
 
 _load:
 	call get_RX
 
+	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
 
@@ -169,13 +175,14 @@ _load:
 	loadi r2, r0 ; Atualiza valor de RX
 	storei r1, r2 ; Salva o valor atualizado de RX na memória
 
-	jmp loop_fim
+	jmp switch_fim
 
 
 _storei:
 	call get_RX
 	call get_RY
 
+	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
 	; r3: Onde está salvo RY
@@ -184,13 +191,14 @@ _storei:
 	add r2, r2, r7 ; tranforma o endereço virtual em r2 em um endereço real
 	storei r2, r4
 
-	jmp loop_fim
+	jmp switch_fim
 
 
 _loadi:
 	call get_RX
 	call get_RY
 
+	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
 	; r3: Onde está salvo RY
@@ -199,28 +207,101 @@ _loadi:
 	add r4, r4, r7 ; tranforma o endereço virtual em r4 em um endereço real
 	loadi r1, r4
 
-	jmp loop_fim
+	jmp switch_fim
 
 
 _loadn:
 	call get_RX
 
+	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
 
+	loadn r5, #PrgC
 	call busca_memoria
+	loadn r6, #PrgC
 
 	; r0: O número
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
-
+	breakp
 	storei r1, r0
 
-	jmp loop_fim
+	jmp switch_fim
 
 
 _mov:
-	jmp loop_fim
+	call get_RX
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+
+	mov r3, r0
+	rotl r3, #14
+	shiftr0 r3, #14 ; r3 contém o tipo de mov
+
+	; Switch do tipo de mov (está em r3)
+	loadn r4, #1
+	cmp r3, r4
+	jeq _mov_fromSP
+
+	loadn r4, #3
+	cmp r3, r4
+	jeq _mov_toSP
+_mov_switch_fim:
+
+	jmp switch_fim
+
+_mov_regreg:
+	call get_RY
+	
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+
+	storei r1, r4 ; Salva o conteúdo de RY em RX
+
+	jmp _mov_switch_fim
+
+_mov_fromSP:
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+
+	loadn r3, #Stack
+	loadi r4, r3
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo SP
+	; r4: O conteúdo de SP
+
+	storei r1, r4 ; Salva o conteúdo de SP em RX
+	
+
+	jmp _mov_switch_fim
+
+_mov_toSP:
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+
+	loadn r3, #Stack
+	loadi r4, r3
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo SP
+	; r4: O conteúdo de SP
+
+	storei r3, r2 ; Salva o conteúdo de RX em SP
+
+	jmp _mov_switch_fim
 
 
 ; Instruções de Controle
@@ -340,6 +421,6 @@ imprime_int_fim:
 regs_fim:
 
 	halt
-	jmp loop_fim
+	jmp switch_fim
 
 code: ; Código a ser simulado
