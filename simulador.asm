@@ -124,7 +124,17 @@ loop:
 
 	loadn r2, #22
 	cmp r1, r2
-	jeq _shift
+	jeq _cmp
+
+	; Instruções de entrada e saída
+	loadn r2, #53
+	cmp r1, r2
+	jeq _inchar
+
+	loadn r2, #50
+	cmp r1, r2
+	jeq _outchar
+
 
 	; Instruções de Controle
 	loadn r2, #15
@@ -728,10 +738,40 @@ _rotr:
 _cmp:
 	jmp switch_fim
 
+; Instruções de Entrada e saída
+
+_inchar:
+	call get_RX
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O Conteúdo de RX
+
+	inchar r3
+
+	storei r1, r3
+
+	jmp switch_fim
+
+_outchar:
+	call get_RX
+	call get_RY
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O Conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O Conteúdo de RY
+
+	outchar r2, r4
+
+	jmp switch_fim
+
 ; Instruções de Controle
 
 erro_mem:
 _halt:
+	breakp
 	loadn r0, #0 ; Posição na tela
 	loadn r2, #'\0' ; Criterio de Parada
 	loadn r1, #StrHalt
