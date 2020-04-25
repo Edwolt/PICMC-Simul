@@ -72,6 +72,9 @@ loop_fim:
 	jmp loop
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Funções (não podem chamar outras funções para não bagunçar a pilha) ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_opcode:
 	mov r1, r0
@@ -109,12 +112,12 @@ busca_memoria:
 	pop r1
 	rts
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Instruções (r0 contém o código da instrução) ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Instruções de manipualação de dado
 _store:
-	; r0 contém a instrução
-
 	call get_RX
 
 	; r1 contém onde está salvo RX
@@ -131,17 +134,24 @@ _store:
 
 	jmp loop_fim
 
+
 _load:
 	jmp loop_fim
+
 
 _storei:
 	jmp loop_fim
 
+
 _loadi:
 	jmp loop_fim
+
 
 _loadn:
 	jmp loop_fim
 
+
 _mov:
 	jmp loop_fim
+
+code: ; Código a ser simulado
