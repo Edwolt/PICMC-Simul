@@ -174,7 +174,6 @@ get_RZ:
 	loadi r6, r5
 	rts
 
-
 ; Funções (não podem chamar outras funções para não acessar a pilha do código simulado)
 busca_memoria:
 	push r1
@@ -482,8 +481,10 @@ _incdec:
 	rotl r3, #6
 	shiftr0 r3, #15
 
-	cmp r3, r3
-	jz _inc
+	loadn r4, #0
+
+	cmp r3, r4
+	jeq _inc
 	dec r2
 	jmp _incdec_end
 _inc:
@@ -605,8 +606,123 @@ _not:
 	jmp switch_fim
 
 _shift:
-	
+	call get_RX
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O Conteúdo de RX
+
+
+	mov r3, r2
+	rotl r3, #12
+	shiftr0 r3, #12 ; Tem o número do shift
+	loadn r4, #0
+	loadn r5, #2
+	cmp r3, r4
+	jeq switch_fim
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O Conteúdo de RX
+	; r3: Número do shift
+	; r4: #0
+	; r5: #2
+
+	mov r6, r2
+	rotl r6, #9
+	shiftr0 r6, #13 ; r4 tem o tipo de shift
+	shiftl0 r6, #4
+
+	; Switch Tipo de shift (em r6)
+	loadn r7, #0
+	cmp r6, r7
+	jeq _shiftl0
+
+	loadn r7, #1
+	cmp r6, r7
+	jeq _shiftl1
+
+	loadn r7, #2
+	cmp r6, r7
+	jeq _shiftr0
+
+	loadn r7, #2
+	cmp r6, r7
+	jeq _shiftr1
+
+	shiftr0 r6, #1
+
+	loadn r7, #2
+	cmp r6, r7
+	jeq _rotl
+
+	loadn r7, #3
+	cmp r6, r7
+	jeq _rotr
+
+_shift_switch_fim:
+	loadn r7, #code
 	jmp switch_fim
+
+_shiftl0:
+	dec r3
+
+	mul r2, r5
+
+	cmp r3, r4
+	jeq shift_switch_fim
+	jmp _shiftl0
+
+_shiftl1:
+	loadn r6, #1
+_shiftl1_loop:
+	dec r3
+
+	mul r2, r2, r5
+	or r2, r2, r6
+
+	cmp r3, r4
+	jeq shift_switch_fim
+	jmp _shiftl1_loop
+
+_shiftr0:
+	dec r3
+	
+	div r2, r5
+
+	cmp r3, r4
+	jeq shift_switch_fim
+	jmp _shiftr0
+	
+_shiftr1:
+	loadn r6, #32768 ; 100000000000000
+_shiftr1_loop:
+	dec r3
+	
+	div r2, r2, r5
+	or r2, r2, r6
+
+	cmp r3, r4
+	jeq shift_switch_fim
+	jmp _shiftr1_loop
+
+_rotl:
+	dec r3
+	
+	rotl r2, #1
+
+	cmp r3, r4
+	jeq shift_switch_fim
+	jmp _shiftr0
+
+_rotr:
+	dec r3
+	
+	rotr r2, #1
+
+	cmp r3, r4
+	jeq shift_switch_fim
+	jmp _shiftr0
 
 _cmp:
 	jmp switch_fim
