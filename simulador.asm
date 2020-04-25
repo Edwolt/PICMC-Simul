@@ -1,7 +1,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Cuidado ao manipular a pilha, senão interfere na do programa que está sendo simulado ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-cmp r0, r0
+shiftr0 r0, #0
 ; O programa simulado tem uma memória de tamanho menor, pois o código do simulador ocupa uma parte da memória do simulador
 
 ; Inicializa Stack com o valor que está em sp
@@ -471,7 +471,6 @@ _div:
 
 _incdec:
 	call get_RX
-	breakp
 
 	; r0: A instrução
 	; r1: Onde está salvo RX
@@ -613,11 +612,13 @@ _shift:
 	; r2: O Conteúdo de RX
 
 
-	mov r3, r2
+	mov r3, r0
 	rotl r3, #12
 	shiftr0 r3, #12 ; Tem o número do shift
+
 	loadn r4, #0
 	loadn r5, #2
+	
 	cmp r3, r4
 	jeq switch_fim
 
@@ -628,10 +629,9 @@ _shift:
 	; r4: #0
 	; r5: #2
 
-	mov r6, r2
+	mov r6, r0
 	rotl r6, #9
 	shiftr0 r6, #13 ; r4 tem o tipo de shift
-	shiftl0 r6, #4
 
 	; Switch Tipo de shift (em r6)
 	loadn r7, #0
@@ -646,7 +646,7 @@ _shift:
 	cmp r6, r7
 	jeq _shiftr0
 
-	loadn r7, #2
+	loadn r7, #3
 	cmp r6, r7
 	jeq _shiftr1
 
@@ -661,16 +661,17 @@ _shift:
 	jeq _rotr
 
 _shift_switch_fim:
+	storei r1, r2
 	loadn r7, #code
 	jmp switch_fim
 
 _shiftl0:
 	dec r3
 
-	mul r2, r5
+	mul r2, r2, r5
 
 	cmp r3, r4
-	jeq shift_switch_fim
+	jeq _shift_switch_fim
 	jmp _shiftl0
 
 _shiftl1:
@@ -682,16 +683,16 @@ _shiftl1_loop:
 	or r2, r2, r6
 
 	cmp r3, r4
-	jeq shift_switch_fim
+	jeq _shift_switch_fim
 	jmp _shiftl1_loop
 
 _shiftr0:
 	dec r3
 	
-	div r2, r5
+	div r2, r2, r5
 
 	cmp r3, r4
-	jeq shift_switch_fim
+	jeq _shift_switch_fim
 	jmp _shiftr0
 	
 _shiftr1:
@@ -703,7 +704,7 @@ _shiftr1_loop:
 	or r2, r2, r6
 
 	cmp r3, r4
-	jeq shift_switch_fim
+	jeq _shift_switch_fim
 	jmp _shiftr1_loop
 
 _rotl:
@@ -712,8 +713,8 @@ _rotl:
 	rotl r2, #1
 
 	cmp r3, r4
-	jeq shift_switch_fim
-	jmp _shiftr0
+	jeq _shift_switch_fim
+	jmp _rotl
 
 _rotr:
 	dec r3
@@ -721,8 +722,8 @@ _rotr:
 	rotr r2, #1
 
 	cmp r3, r4
-	jeq shift_switch_fim
-	jmp _shiftr0
+	jeq _shift_switch_fim
+	jmp _rotr
 
 _cmp:
 	jmp switch_fim
