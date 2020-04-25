@@ -13,7 +13,7 @@ add r1, r1, r2 ; O programa do simulador pode guardar uma chamada de função
 sub r0, r0, r1 ; Transforma o valor real do Stack Pointer para o valor virtual
 store Stack, r0
 
-; r7 tem #code
+; r7: #code
 
 jmp loop
 
@@ -39,13 +39,13 @@ Inteiros: string "0123456789"
 loop:
 	call busca_memoria
 
-	; r0 tem a instrução
+	; r0: A instrução
 
 	; Pega opcode da operação 
 	call get_opcode
 
-	; r0 tem a instrução
-	; r1 tem o opcode
+	; r0: A instrução
+	; r1: O opcode
 
 	; Switch das Instruções (depois do jeq o r1 pode ser sobrescrito)
 	loadn r2, #49
@@ -138,16 +138,15 @@ busca_memoria:
 _store:
 	call get_RX
 
-	; r1 contém onde está salvo RX
-	; r2 contém o conteúdo de RX
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
 
-	call busca_memoria
+	call busca_memoria ; r0: Oendereço virtual
+	add r0, r0, r7 ; Tranformando r0 em endereço real
 
-	; r0 contém o endereço virtual
-
-	add r0, r0, r7
-
-	; r0 contém o endereço real
+	; r0: O endereço real
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
 
 	storei r0, r2 ; guarda no endereço (em r0) o conteúdo de RX (em r2)
 
@@ -157,16 +156,15 @@ _store:
 _load:
 	call get_RX
 
-	; r1 contém onde está salvo RX
-	; r2 contém o conteúdo de RX
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
 
-	call busca_memoria
+	call busca_memoria ; r0 contém endereço virtual
+	add r0, r0, r7 ; Tranformando r0 em endereço real
 
-	; r0 contém o endereço virtual
-
-	add r0, r0, r7
-
-	; r0 contém o endereço real
+	; r0: O endereço real
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
 
 	loadi r2, r0 ; Atualiza valor de RX
 	storei r1, r2 ; Salva o valor atualizado de RX na memória
@@ -176,15 +174,12 @@ _load:
 
 _storei:
 	call get_RX
-
-	; r1 contém onde está salvo RX
-	; r2 contém o conteúdo de RX
-
 	call get_RY
 
-	; r3 contém onde está salvo RY
-	; r4 contém o conteúdo de RY
-
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
 
 	add r2, r2, r7 ; tranforma o endereço virtual em r2 em um endereço real
 	storei r2, r4
@@ -194,14 +189,12 @@ _storei:
 
 _loadi:
 	call get_RX
-
-	; r1 contém onde está salvo RX
-	; r2 contém o conteúdo de RX
-
 	call get_RY
 
-	; r3 contém onde está salvo RY
-	; r4 contém o conteúdo de RY
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
 
 	add r4, r4, r7 ; tranforma o endereço virtual em r4 em um endereço real
 	loadi r1, r4
@@ -212,12 +205,14 @@ _loadi:
 _loadn:
 	call get_RX
 
-	; r1 contém onde está salvo RX
-	; r2 contém o conteúdo de RX
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
 
 	call busca_memoria
 
-	; r0 contém o número
+	; r0: O número
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
 
 	storei r1, r0
 
@@ -231,7 +226,6 @@ _mov:
 ; Instruções de Controle
 
 _halt:
-	breakp
 	loadn r0, #0 ; Posição na tela
 	loadn r2, #'\0' ; Criterio de Parada
 	loadn r1, #StrHalt
@@ -254,7 +248,7 @@ imprime_str_loop:
 imprime_str_fim:
 	
 
-	loadn r0, #0 ; Numero do Registrador
+	loadn r0, #0 ; Número do Registrador
 	loadn r1, #3 ; Linha da tela
 regs_loop:
 	loadn r7, #8
@@ -263,10 +257,13 @@ regs_loop:
 
 	
 	loadn r7, #40 ; Tamanho da linha
-	mul r2, r1, r7 ; Posicao na tela
+	mul r2, r1, r7 ; Posição na tela
 	
-	; Ocupei até r2
+	; r0: Número do registrador
+	; r1: Linha da tela
+	; r2: Posição da tela
 
+	; Imprime O nome do registrador
 	loadn r4, #'R'
 	outchar r4, r2
 	inc r2
@@ -285,22 +282,42 @@ regs_loop:
 	outchar r4, r2
 	inc r2
 
-	; Ocupei até r2
+	; r0: Número do registrador
+	; r1: Linha da tela
+	; r2: Posição da tela
+
+	;imprime_int_loop(){
+	;	Inteiros = "0123456789" // r3
+	;	casa_decimal = 10000 // r4
+	;	num := número a ser impresso // r5
+    ;
+	;	while(r4 != 0){
+	;		digito = num / casa_decimal // r6
+	;		print(Inteiros[digito])
+	;		num %= casa_decimal
+	;		casa_decimal /= 10
+	;	}
+	;}
 
 	loadn r3, #Inteiros
 	loadn r4, #10000
 	loadn r7, #Regs
 	add r7, r7, r0
 	loadi r5, r7
-	; r3 Tem a base do vetor de Inteiros
-	; r4 Tem a casa decimal a ser pega
-	; r5 Tem o valor do registrador
 imprime_int_loop:
+
+	; r0: Número do registrador
+	; r1: Linha da tela
+	; r2: Posição da tela
+	; r3: A base do vetor de Inteiros
+	; r4: A casa decimal a ser pega
+	; r5: A valor do registrador
+
 	loadn r7, #0
 	cmp r4, r7
 	jeq imprime_int_fim
 
-	div r6, r5, r4 ; Numero a ser impresso
+	div r6, r5, r4 ; Número a ser impresso
 	add r7, r3, r6 ; Posição onde está o número
 	loadi r7, r7
 	outchar r7, r2
