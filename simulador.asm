@@ -78,12 +78,21 @@ fim:
 
 	jmp loop
 
-
 ; Instruções de manipualação de dado
 _store:
+	; Pegando valor de RX
 	mov r1, r0
 	rotl r1, #6
 	shiftr0 r1, #13
+	add r1, #Regs
+
+	; r1 contem onde está salvo RX
+
+	loadi r2, r1
+
+	; r2 contem o conteúdo de RX
+
+
 
 	jmp fim
 
