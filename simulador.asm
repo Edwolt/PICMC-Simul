@@ -1,12 +1,14 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; O código não pode manipular a pilha, senão interfere na pilha do programa que está sendo simulado ;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Cuidado ao manipular a pilha, senão interfere na do programa que está sendo simulado ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; O programa simulado tem uma memória de tamanho menor, pois o código do simulador ocupa uma parte da memória do simulador
 
 ; Inicializa Stack com o valor que está em sp
 mov r0, sp ; Pega o valor da stack, pois nela iniciará a stack do programa a ser simulado
 loadn r1, #code
+loadn r2, #9
+add r1, r1, r2 ; O programa do simulador pode guardar uma chamada de função
 sub r0, r0, r1 ; Transforma o valor real do Stack Pointer para o valor virtual
 store Stack, r0
 jmp loop
@@ -30,21 +32,12 @@ Regs: var #8
 
 
 loop:
-	; Pega o valor que Program Counter aponta
-	load r1, PrgC ; Valor real do Program Counter
-	loadn r2, #code
-	add r1, r1, r2 ; Transforma o valor virtual do Program counter para o valor real
-	loadi r0, r1 ; Carrega valor apontado pelo Program Counter (valor real)
-
-	; Incrementa valor virtual do Program Counter e o salva na memória
-	inc r2
-	store PrgC, r2
+	call busca_memoria
 
 	; r0 tem a instrução
 
 	; Pega opcode da operação 
-	mov r1, r0
-	shiftr0 r1, #10
+	call get_opcode
 
 	; r0 tem a instrução
 	; r1 tem o opcode
@@ -74,55 +67,81 @@ loop:
 	loadn r2, #51
 	cmp r1, r2
 	jeq _mov
-fim:
+loop_fim:
 
 	jmp loop
 
-; Instruções de manipualação de dado
-_store:
-	; Pegando valor de RX
+
+
+get_opcode:
+	mov r1, r0
+	shiftr0 r1, #10
+	rts
+
+get_RX:
 	mov r1, r0
 	rotl r1, #6
 	shiftr0 r1, #13
 	loadn r2, #Regs
 	add r1, r1, r2 ; r1 contém onde está salvo RX
 
-	loadi r1, r1
+	loadi r2, r1 ; r2 contém o conteudo de RX
+	rts
 
-	; r1 contém o conteúdo de RX
+
+
+; Funções (não podem chamar outras funções para não acessar a pilha do código simulado)
+busca_memoria:
+	push r1
+	push r2
 
 	; Pega o valor que Program Counter aponta
-	load r3, PrgC ; Valor real do Program Counter
-	loadn r4, #code
-	add r3, r3, r4 ; Transforma o valor virtual do Program counter para o valor real
-	loadi r2, r3 ; Carrega valor apontado pelo Program Counter (valor real)
+	load r1, PrgC ; Valor real do Program Counter
+	loadn r2, #code
+	add r1, r1, r2 ; Transforma o valor virtual do Program counter para o valor real
+	loadi r0, r1 ; Carrega valor apontado pelo Program Counter (valor real)
 
 	; Incrementa valor virtual do Program Counter e o salva na memória
-	inc r4
-	store PrgC, r4
+	inc r2
+	store PrgC, r2
 
-	; r2 contém o endereço real
+	pop r2
+	pop r1
+	rts
+
+
+
+; Instruções de manipualação de dado
+_store:
+	; r0 contém a instrução
+
+	call get_RX
+
+	; r1 contém onde está salvo RX
+	; r2 contém o conteúdo de RX
+
+	call busca_memoria
+
+	; r0 contém o endereço virtual
 
 	loadn r3, #code
-	add r2, r2, r3
+	add r0, r0, r3
 
-	; r2 contém o endereço real
+	storei r0, r2
 
-	storei r2, r1
-
-	jmp fim
+	jmp loop_fim
 
 _load:
-	jmp fim
+	jmp loop_fim
 
 _storei:
-	jmp fim
+	jmp loop_fim
 
 _loadi:
-	jmp fim
+	jmp loop_fim
 
 _loadn:
-	jmp fim
+	jmp loop_fim
 
 _mov:
-	jmp fim
+	jmp loop_fim
