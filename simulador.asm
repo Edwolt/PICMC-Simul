@@ -7,10 +7,11 @@ shiftr0 r0, #0
 ; Inicializa Stack com o valor que está em sp
 mov r0, sp ; Pega o valor de sp, pois nela iniciará a stack do programa a ser simulado
 loadn r7, #code ; em r7 fica salvo o valor #code
-loadn r2, #9
-mov r1, r7
-add r1, r1, r2 ; O programa do simulador pode guardar uma chamada de função
-sub r0, r0, r1 ; Transforma o valor real do Stack Pointer para o valor virtual
+
+dec r7
+mov sp, r7 ; move stack para antes do código simulado
+inc r7
+
 store Stack, r0
 
 ; r7: #code (Constante durante todo código)
@@ -386,7 +387,6 @@ _mov_toSP:
 
 ; Instruçoẽs Aritméticas
 
-; TODO adcionar uso do FlagR
 _add:
 	call get_RX
 	call get_RY
@@ -400,13 +400,24 @@ _add:
 	; r5: Onde está salvo RZ
 	; r6: O conteúdo de RZ
 
+	; Carrega FR para r3
+	load r3, FlagR
+	push r3
+	pop fr
+
 	add r2, r4, r6
+	
+	; Volta FR para r3
+	push fr
+	pop r3
 
 	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: Novo conteúdo de RX
+	; r3: Flag Register
 
 	storei r1, r2
+	store FlagR, r3
 
 	jmp switch_fim
 
@@ -423,13 +434,24 @@ _sub:
 	; r5: Onde está salvo RZ
 	; r6: O conteúdo de RZ
 
+	; Carrega FR para r3
+	load r3, FlagR
+	push r3
+	pop fr
+
 	sub r2, r4, r6
+	
+	; Volta FR para r3
+	push fr
+	pop r3
 
 	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: Novo conteúdo de RX
+	; r3: Flag Register
 
 	storei r1, r2
+	store FlagR, r3
 
 	jmp switch_fim
 
@@ -446,13 +468,24 @@ _mult:
 	; r5: Onde está salvo RZ
 	; r6: O conteúdo de RZ
 
+	; Carrega FR para r3
+	load r3, FlagR
+	push r3
+	pop fr
+
 	mul r2, r4, r6
+	
+	; Volta FR para r3
+	push fr
+	pop r3
 
 	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: Novo conteúdo de RX
+	; r3: Flag Register
 
 	storei r1, r2
+	store FlagR, r3
 
 	jmp switch_fim
 
@@ -469,13 +502,24 @@ _div:
 	; r5: Onde está salvo RZ
 	; r6: O conteúdo de RZ
 
+	; Carrega FR para r3
+	load r3, FlagR
+	push r3
+	pop fr
+
 	div r2, r4, r6
+	
+	; Volta FR para r3
+	push fr
+	pop r3
 
 	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: Novo conteúdo de RX
+	; r3: Flag Register
 
 	storei r1, r2
+	store FlagR, r3
 
 	jmp switch_fim
 
@@ -488,18 +532,41 @@ _incdec:
 
 	mov r3, r0
 	rotl r3, #6
-	shiftr0 r3, #15
+	shiftr0 r3, #15 ; r3 diz se é inc ou dec
 
 	loadn r4, #0
 
 	cmp r3, r4
 	jeq _inc
+
+_dec:
+	; Carrega FR para r3
+	load r3, FlagR
+	push r3
+	pop fr
+
 	dec r2
+	
+	; Volta FR para r3
+	push fr
+	pop r3
+
 	jmp _incdec_end
 _inc:
+	; Carrega FR para r3
+	load r3, FlagR
+	push r3
+	pop fr
+
 	inc r2
+	
+	; Volta FR para r3
+	push fr
+	pop r3
+
 _incdec_end:
 	storei r1, r2
+	store FlagR, r3
 	jmp switch_fim
 
 _mod:
@@ -515,13 +582,24 @@ _mod:
 	; r5: Onde está salvo RZ
 	; r6: O conteúdo de RZ
 
+	; Carrega FR para r3
+	load r3, FlagR
+	push r3
+	pop fr
+
 	mod r2, r4, r6
+	
+	; Volta FR para r3
+	push fr
+	pop r3
 
 	; r0: A instrução
 	; r1: Onde está salvo RX
 	; r2: Novo conteúdo de RX
+	; r3: Flag Register
 
 	storei r1, r2
+	store FlagR, r3
 
 	jmp switch_fim
 
@@ -736,6 +814,27 @@ _rotr:
 	jmp _rotr
 
 _cmp:
+	call get_RX
+	call get_RY
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O Conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O Conteúdo de RY
+
+	; Carrega FR para r5
+	load r5, FlagR
+	push r5
+	pop fr
+
+	cmp r2, r4
+	
+	; Volta FR para r5
+	push fr
+	pop r5
+
+	store FlagR, r5
 	jmp switch_fim
 
 ; Instruções de Entrada e saída
@@ -771,7 +870,6 @@ _outchar:
 
 erro_mem:
 _halt:
-	breakp
 	loadn r0, #0 ; Posição na tela
 	loadn r2, #'\0' ; Criterio de Parada
 	loadn r1, #StrHalt
@@ -796,6 +894,7 @@ imprime_str_fim:
 
 	loadn r0, #0 ; Número do Registrador
 	loadn r1, #3 ; Linha da tela
+	loadn r3, #Regs
 regs_loop:
 	loadn r7, #8
 	cmp r0, r7
@@ -808,6 +907,7 @@ regs_loop:
 	; r0: Número do registrador
 	; r1: Linha da tela
 	; r2: Posição da tela
+	; r3: Inicio do vetor de Registradores
 
 	; Imprime O nome do registrador
 	loadn r4, #'R'
@@ -832,10 +932,35 @@ regs_loop:
 	; r1: Linha da tela
 	; r2: Posição da tela
 
+	loadi r3, r7
+
+	; r0: Número do registrador
+	; r1: Linha da tela
+	; r2: Posição da tela
+	; r3: Conteúdo do Registrador
+
+	mov r4, r3
+	loadi r3, r3
+	call imprime_int
+	mov r3, r4
+
+	inc r0
+	inc r1
+	inc r3
+
+	jmp regs_loop
+
+regs_fim:
+	halt
+	halt
+	halt
+	jmp switch_fim
+
+
 	;imprime_int_loop(){
-	;	Inteiros = "0123456789" // r3
-	;	casa_decimal = 10000 // r4
-	;	num := número a ser impresso // r5
+	;	Inteiros = "0123456789" // r4
+	;	casa_decimal = 10000 // r5
+	;	num := número a ser impresso // r6
     ;
 	;	while(r4 != 0){
 	;		digito = num / casa_decimal // r6
@@ -844,48 +969,52 @@ regs_loop:
 	;		casa_decimal /= 10
 	;	}
 	;}
+imprime_int:
 
-	loadn r3, #Inteiros
-	loadn r4, #10000
-	loadn r7, #Regs
-	add r7, r7, r0
-	loadi r5, r7
+	push r4
+	push r5
+	push r6
+	push r7
+
+	loadn r4, #Inteiros
+	loadn r5, #10000
+	; r0: Número do registrador
+	; r1: Linha da tela
+	; r2: Posição da tela
+	; r3: A valor a ser impresso
+
 imprime_int_loop:
 
 	; r0: Número do registrador
 	; r1: Linha da tela
 	; r2: Posição da tela
-	; r3: A base do vetor de Inteiros
-	; r4: A casa decimal a ser pega
-	; r5: A valor do registrador
+	; r3: A valor a ser impressor
+	; r4: A base do vetor de Inteiros
+	; r5: A casa decimal a ser pega
 
 	loadn r7, #0
-	cmp r4, r7
+	cmp r5, r7
 	jeq imprime_int_fim
 
-	div r6, r5, r4 ; Número a ser impresso
-	add r7, r3, r6 ; Posição onde está o número
+	div r6, r3, r5 ; Digito a ser impresso
+	add r7, r4, r6 ; Posição onde está o número
 	loadi r7, r7
 	outchar r7, r2
 	inc r2
 
-	mod r5, r5, r4
+	mod r3, r3, r5
 	loadn r7, #10
-	div r4, r4, r7
+	div r5, r5, r7
 
 	jmp imprime_int_loop
 
 imprime_int_fim:
+	
+	pop r7
+	pop r6
+	pop r5
+	pop r4
 
-	inc r0
-	inc r1
-
-	jmp regs_loop
-
-
-regs_fim:
-
-	halt
-	jmp switch_fim
+	rts
 
 code: ; Código a ser simulado
