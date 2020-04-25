@@ -336,15 +336,95 @@ _mov_toSP:
 ; Instruçoẽs Aritméticas
 
 _add:
+	call get_RX
+	call get_RY
+	call get_RZ
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+	; r5: Onde está salvo RZ
+	; r6: O conteúdo de RZ
+
+	add r2, r4, r6
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: Novo conteúdo de RX
+
+	storei r1, r2
+
 	jmp switch_fim
 
 _sub:
+	call get_RX
+	call get_RY
+	call get_RZ
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+	; r5: Onde está salvo RZ
+	; r6: O conteúdo de RZ
+
+	sub r2, r4, r6
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: Novo conteúdo de RX
+
+	storei r1, r2
+
 	jmp switch_fim
 
 _mult:
+	call get_RX
+	call get_RY
+	call get_RZ
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+	; r5: Onde está salvo RZ
+	; r6: O conteúdo de RZ
+
+	mul r2, r4, r6
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: Novo conteúdo de RX
+
+	storei r1, r2
+
 	jmp switch_fim
 
 _div:
+	call get_RX
+	call get_RY
+	call get_RZ
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: O conteúdo de RX
+	; r3: Onde está salvo RY
+	; r4: O conteúdo de RY
+	; r5: Onde está salvo RZ
+	; r6: O conteúdo de RZ
+
+	div r2, r4, r6
+
+	; r0: A instrução
+	; r1: Onde está salvo RX
+	; r2: Novo conteúdo de RX
+
+	storei r1, r2
+
 	jmp switch_fimim
 
 _decinc:
