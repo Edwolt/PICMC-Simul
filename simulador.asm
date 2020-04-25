@@ -52,6 +52,7 @@ loop:
 	; r1: O opcode
 
 	; Switch das Instruções (depois do jeq o r1 pode ser sobrescrito)
+	; Instruções de manipualação de dado
 	loadn r2, #49
 	cmp r1, r2
 	jeq _store
@@ -76,7 +77,14 @@ loop:
 	cmp r1, r2
 	jeq _mov
 
+	; Instruções Aritméticas
+	loadn r2, #51
+	cmp r1, r2
+	jeq _mov
 
+
+
+	; Instruções de Controle
 	loadn r2, #15
 	cmp r1, r2
 	jeq _halt
@@ -114,6 +122,16 @@ get_RY:
 	loadi r4, r3 ; r4 contém o conteudo de RX
 	rts
 
+get_RZ:
+	mov r5, r0
+	rotl r5, #12
+	shiftr0 r5, #13
+	loadn r6, #Regs
+	add  r5, r5, r6
+
+	loadi r6, r5
+	rts
+
 
 ; Funções (não podem chamar outras funções para não acessar a pilha do código simulado)
 busca_memoria:
@@ -123,6 +141,9 @@ busca_memoria:
 	; Pega o valor que PC aponta
 	load r1, PrgC ; Valor virtual do PC
 	add r2, r1, r7 ; Transforma o valor virtual do PC para o valor real
+	cmp r2, r7 ; Testa se posicao da meória é valida
+	jle erro_mem
+
 	loadi r0, r2 ; Carrega valor apontado pelo PC (valor real)
 
 	; Incrementa valor virtual do PC e o salva na memória
@@ -146,13 +167,15 @@ _store:
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
 
-	call busca_memoria ; r0: Oendereço virtual
+	call busca_memoria ; r0: O endereço virtual
 	add r0, r0, r7 ; Tranformando r0 em endereço real
 
 	; r0: O endereço real
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
 
+	cmp r0, r7 ; Testa se posicao da meória é valida
+	jle erro_mem
 	storei r0, r2 ; guarda no endereço (em r0) o conteúdo de RX (em r2)
 
 	jmp switch_fim
@@ -171,7 +194,9 @@ _load:
 	; r0: O endereço real
 	; r1: Onde está salvo RX
 	; r2: O conteúdo de RX
-
+	
+	cmp r0, r7 ; Testa se posiço da meória é valida
+	jle erro_mem
 	loadi r2, r0 ; Atualiza valor de RX
 	storei r1, r2 ; Salva o valor atualizado de RX na memória
 
@@ -189,6 +214,8 @@ _storei:
 	; r4: O conteúdo de RY
 
 	add r2, r2, r7 ; tranforma o endereço virtual em r2 em um endereço real
+	cmp r2, r7 ; Testa se posiço da meória é valida
+	jle erro_mem
 	storei r2, r4
 
 	jmp switch_fim
@@ -205,6 +232,8 @@ _loadi:
 	; r4: O conteúdo de RY
 
 	add r4, r4, r7 ; tranforma o endereço virtual em r4 em um endereço real
+	cmp r4, r7 ; Testa se posiço da meória é valida
+	jle erro_mem
 	loadi r1, r4
 
 	jmp switch_fim
@@ -304,8 +333,50 @@ _mov_toSP:
 	jmp _mov_switch_fim
 
 
+; Instruçoẽs Aritméticas
+
+_add:
+	jmp switch_fim
+
+_sub:
+	jmp switch_fim
+
+_mult:
+	jmp switch_fim
+
+_div:
+	jmp switch_fimim
+
+_decinc:
+	jmp switch_fim
+
+_mod:
+	jmp switch_fim
+
+_and:
+	jmp switch_fim
+
+_or:
+	jmp switch_fim
+
+_xor:
+	jmp switch_fim
+
+_not:
+	jmp switch_fim
+
+_rot:
+	jmp switch_fim
+
+_shift:
+	jmp switch_fim
+
+_cmp:
+	jmp switch_fim
+
 ; Instruções de Controle
 
+erro_mem:
 _halt:
 	loadn r0, #0 ; Posição na tela
 	loadn r2, #'\0' ; Criterio de Parada
