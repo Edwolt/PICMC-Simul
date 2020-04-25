@@ -204,6 +204,17 @@ _loadi:
 
 
 _loadn:
+	call get_RX
+
+	; r1 contém onde está salvo RX
+	; r2 contém o conteúdo de RX
+
+	call busca_memoria
+
+	; r0 contém o número
+
+	storei r1, r0
+
 	jmp loop_fim
 
 
