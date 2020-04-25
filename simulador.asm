@@ -23,9 +23,8 @@ Reg7: nop
 
 main:
 	; Inicializa PrgC com o íncio do código
-	loadn r7, #main ; Salva o ínicio do código no r7
+	loadn r7, #code ; Salva o ínicio do código no r7
 	store PrgC, r7
-	load r6, PrgC
 
 	; Inicializa Stack com o valor que está em sp
 	mov r0, sp
@@ -71,7 +70,6 @@ loop:
 	cmp r1, r2
 	jeq _loadn
 
-	; Está diferente do PDF
 	loadn r2, #51
 	cmp r1, r2
 	jeq _mov
