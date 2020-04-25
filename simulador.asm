@@ -6,11 +6,15 @@
 
 ; Inicializa Stack com o valor que está em sp
 mov r0, sp ; Pega o valor da stack, pois nela iniciará a stack do programa a ser simulado
-loadn r1, #code
+loadn r7, #code ; em r7 fica salvo o valor #code
 loadn r2, #9
+mov r1, r7
 add r1, r1, r2 ; O programa do simulador pode guardar uma chamada de função
 sub r0, r0, r1 ; Transforma o valor real do Stack Pointer para o valor virtual
 store Stack, r0
+
+; r7 tem #code
+
 jmp loop
 
 Stack: var #1 ; Guarda o Stack Pointer do programa simulado
@@ -42,7 +46,6 @@ loop:
 	; r0 tem a instrução
 	; r1 tem o opcode
 
-	breakp
 	; Switch das Instruções (depois do jeq o r1 pode ser sobrescrito)
 	loadn r2, #49
 	cmp r1, r2
@@ -91,6 +94,15 @@ get_RX:
 	loadi r2, r1 ; r2 contém o conteudo de RX
 	rts
 
+get_RY:
+	mov r3, r0
+	rotl r3, #9
+	shiftr0 r3, #13
+	loadn r4, #Regs
+	add r3, r3, r4 ; r3 contém onde está salvo RX
+
+	loadi r4, r3 ; r4 contém o conteudo de RX
+	rts
 
 
 ; Funções (não podem chamar outras funções para não acessar a pilha do código simulado)
@@ -100,8 +112,7 @@ busca_memoria:
 
 	; Pega o valor que Program Counter aponta
 	load r1, PrgC ; Valor real do Program Counter
-	loadn r2, #code
-	add r1, r1, r2 ; Transforma o valor virtual do Program counter para o valor real
+	add r1, r1, r7 ; Transforma o valor virtual do Program counter para o valor real
 	loadi r0, r1 ; Carrega valor apontado pelo Program Counter (valor real)
 
 	; Incrementa valor virtual do Program Counter e o salva na memória
@@ -117,6 +128,7 @@ busca_memoria:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Instruções de manipualação de dado
+
 _store:
 	call get_RX
 
@@ -127,8 +139,7 @@ _store:
 
 	; r0 contém o endereço virtual
 
-	loadn r3, #code
-	add r0, r0, r3
+	add r0, r0, r7
 
 	; r0 contém o endereço real
 
@@ -147,8 +158,7 @@ _load:
 
 	; r0 contém o endereço virtual
 
-	loadn r3, #code
-	add r0, r0, r3
+	add r0, r0, r7
 
 	; r0 contém o endereço real
 
@@ -159,10 +169,37 @@ _load:
 
 
 _storei:
+	call get_RX
+
+	; r1 contém onde está salvo RX
+	; r2 contém o conteúdo de RX
+
+	call get_RY
+
+	; r3 contém onde está salvo RY
+	; r4 contém o conteúdo de RY
+
+
+	add r2, r2, r7 ; tranforma o endereço virtual em r2 em um endereço real
+	storei r2, r4
+
 	jmp loop_fim
 
 
 _loadi:
+	call get_RX
+
+	; r1 contém onde está salvo RX
+	; r2 contém o conteúdo de RX
+
+	call get_RY
+
+	; r3 contém onde está salvo RY
+	; r4 contém o conteúdo de RY
+
+	add r4, r4, r7 ; tranforma o endereço virtual em r4 em um endereço real
+	loadi r1, r4
+
 	jmp loop_fim
 
 
