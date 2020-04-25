@@ -130,12 +130,31 @@ _store:
 	loadn r3, #code
 	add r0, r0, r3
 
+	; r0 contém o endereço real
+
 	storei r0, r2
 
 	jmp loop_fim
 
 
 _load:
+	call get_RX
+
+	; r1 contém onde está salvo RX
+	; r2 contém o conteúdo de RX
+
+	call busca_memoria
+
+	; r0 contém o endereço virtual
+
+	loadn r3, #code
+	add r0, r0, r3
+
+	; r0 contém o endereço real
+
+	loadi r2, r0 ; Atualiza valor de RX
+	storei r1, r2 ; Salva o valor atualizado de RX na memória
+
 	jmp loop_fim
 
 
@@ -153,5 +172,6 @@ _loadn:
 
 _mov:
 	jmp loop_fim
+
 
 code: ; Código a ser simulado
