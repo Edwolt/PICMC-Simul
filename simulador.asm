@@ -34,7 +34,8 @@ Regs: var #8
 	static Regs + #6, #0
 	static Regs + #7, #0
 
-
+StrHalt: string "#HALT#"
+Inteiros: string "0123456789"
 loop:
 	call busca_memoria
 
@@ -70,6 +71,11 @@ loop:
 	loadn r2, #51
 	cmp r1, r2
 	jeq _mov
+
+
+	loadn r2, #15
+	cmp r1, r2
+	jeq _halt
 loop_fim:
 
 	jmp loop
@@ -143,7 +149,7 @@ _store:
 
 	; r0 contém o endereço real
 
-	storei r0, r2
+	storei r0, r2 ; guarda no endereço (em r0) o conteúdo de RX (em r2)
 
 	jmp loop_fim
 
@@ -221,5 +227,102 @@ _loadn:
 _mov:
 	jmp loop_fim
 
+
+; Instruções de Controle
+
+_halt:
+	breakp
+	loadn r0, #0 ; Posição na tela
+	loadn r2, #'\0' ; Criterio de Parada
+	loadn r1, #StrHalt
+	loadn r6, #2304 ; Vermelho
+imprime_str_loop:
+	loadi r7, r1 ; Carrega catacter
+	
+	; Compara criterio de parada
+	cmp r7, r2
+	jeq imprime_str_fim
+
+	or r7, r7, r6 ; Colore caracter
+
+	outchar r7, r0
+	inc r0
+	inc r1
+
+	jmp imprime_str_loop
+
+imprime_str_fim:
+	
+
+	loadn r0, #0 ; Numero do Registrador
+	loadn r1, #3 ; Linha da tela
+regs_loop:
+	loadn r7, #8
+	cmp r0, r7
+	jeq regs_fim
+
+	
+	loadn r7, #40 ; Tamanho da linha
+	mul r2, r1, r7 ; Posicao na tela
+	
+	; Ocupei até r2
+
+	loadn r4, #'R'
+	outchar r4, r2
+	inc r2
+
+	loadn r5, #Inteiros
+	add r5, r0, r5
+	loadi r5, r5
+	outchar r5, r2
+	inc r2
+
+	loadn r4, #':'
+	outchar r4, r2
+	inc r2
+
+	loadn r4, #' '
+	outchar r4, r2
+	inc r2
+
+	; Ocupei até r2
+
+	loadn r3, #Inteiros
+	loadn r4, #10000
+	loadn r7, #Regs
+	add r7, r7, r0
+	loadi r5, r7
+	; r3 Tem a base do vetor de Inteiros
+	; r4 Tem a casa decimal a ser pega
+	; r5 Tem o valor do registrador
+imprime_int_loop:
+	loadn r7, #0
+	cmp r4, r7
+	jeq imprime_int_fim
+
+	div r6, r5, r4 ; Numero a ser impresso
+	add r7, r3, r6 ; Posição onde está o número
+	loadi r7, r7
+	outchar r7, r2
+	inc r2
+
+	mod r5, r5, r4
+	loadn r7, #10
+	div r4, r4, r7
+
+	jmp imprime_int_loop
+
+imprime_int_fim:
+
+	inc r0
+	inc r1
+
+	jmp regs_loop
+
+
+regs_fim:
+
+	halt
+	jmp loop_fim
 
 code: ; Código a ser simulado
