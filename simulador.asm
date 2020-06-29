@@ -141,6 +141,11 @@ loop:
 	loadn r2, #15
 	cmp r1, r2
 	jeq _halt
+	; TODO
+	
+	; TODO jump
+	; TODO Call
+	; TODO explicar o que está acontecendo
 switch_fim:
 
 	jmp loop
